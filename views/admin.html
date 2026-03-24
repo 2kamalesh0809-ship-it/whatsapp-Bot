@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>MRCoach Fitness – Bot Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <style>
+    :root {
+      --primary: #2563EB;
+      --success: #16A34A;
+      --danger: #DC2626;
+      --background: #F9FAFB;
+      --card: #FFFFFF;
+      --text-primary: #111827;
+      --text-secondary: #6B7280;
+      --border: #E5E7EB;
+    }
+
+    body {
+      background: var(--background);
+      color: var(--text-primary);
+    }
+
+    .status-dot-8 {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 5px;
+    }
+
+    .status-connected {
+      background: var(--success);
+    }
+
+    .status-disconnected {
+      background: var(--danger);
+    }
+
+    .status-loading {
+      background: #F59E0B;
+    }
+
+    #app {
+      max-width: 1100px;
+      margin: auto;
+      padding: 20px 10px;
+    }
+
+    .nav-link {
+      cursor: pointer;
+      padding: 5px 15px;
+      font-size: 14px;
+    }
+
+    .card {
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+
+    .saas-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    .saas-table thead {
+      background: #F9FAFB;
+    }
+
+    .saas-table th {
+      color: var(--text-secondary);
+      font-weight: 500;
+      font-size: 13px;
+      text-transform: uppercase;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    .saas-table td {
+      height: 56px;
+      padding: 0 16px;
+      vertical-align: middle;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .saas-table tbody tr:nth-child(even) {
+      background-color: var(--card);
+    }
+
+    .saas-table tbody tr:nth-child(odd) {
+      background-color: #FAFAFA;
+    }
+
+    .saas-table tbody tr:hover {
+      background-color: #F3F4F6 !important;
+      cursor: pointer;
+    }
+
+    .col-name {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .col-phone {
+      color: var(--text-primary);
+    }
+
+    .col-loc {
+      color: var(--text-secondary);
+    }
+
+    .status-badge {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 500;
+      display: inline-block;
+    }
+
+    .badge-pending {
+      background: #FEF3C7;
+      color: #92400E;
+    }
+
+    .badge-processing {
+      background: #DBEAFE;
+      color: #1E40AF;
+    }
+
+    .badge-completed {
+      background: #DCFCE7;
+      color: #166534;
+    }
+
+    .badge-rejected {
+      background: #FEE2E2;
+      color: #991B1B;
+    }
+
+    .actions-col {
+      text-align: right;
+      color: #9CA3AF;
+      font-size: 16px;
+    }
+
+    .action-icon {
+      margin-left: 12px;
+      transition: color 0.15s;
+    }
+
+    .action-icon:hover {
+      color: #111827;
+    }
+
+    .custom-tab {
+      color: var(--text-secondary);
+      font-weight: 500;
+      border: none !important;
+      border-bottom: 2px solid transparent !important;
+      padding: 8px 0;
+      background: transparent;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .custom-tab:hover {
+      color: var(--text-primary);
+      border-bottom: 2px solid #D1D5DB !important;
+    }
+
+    .custom-tab.active {
+      color: var(--text-primary) !important;
+      font-weight: 600 !important;
+      border-bottom: 2px solid var(--primary) !important;
+    }
+
+    .tab-badge {
+      background: #E5E7EB;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 12px;
+      margin-left: 6px;
+      color: #374151;
+      font-weight: 600;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .custom-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+
+    .custom-input-icon {
+      position: absolute;
+      left: 12px;
+      color: #9CA3AF;
+      font-size: 14px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .filter-grid .form-control,
+    .filter-grid .form-select,
+    .filter-grid .btn {
+      height: 42px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      box-shadow: none;
+      font-size: 14px;
+      width: 100%;
+    }
+
+    .filter-grid .form-control.with-icon,
+    .filter-grid .form-select.with-icon {
+      padding-left: 36px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Sticky SaaS Header -->
+  <div id="saas-header" class="sticky-top bg-white d-flex justify-content-between align-items-center"
+    style="display: none !important; padding: 12px 24px; z-index: 1000; border-bottom: 1px solid var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+    <!-- Left -->
+    <div class="d-flex align-items-center gap-2">
+      <!-- App logo -->
+      <div
+        style="width: 32px; height: 32px; background: #111827; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">
+        MR</div>
+      <h5 class="m-0 fw-bold" style="color: #111827; font-size: 18px;">MRCoach Fitness</h5>
+    </div>
+    <!-- Right -->
+    <div class="d-flex align-items-center gap-4">
+      <div class="d-flex align-items-center">
+        <span id="status-dot" class="status-dot-8 status-disconnected"></span>
+        <span id="status-text" style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">Bot
+          Offline</span>
+      </div>
+      <div class="d-flex gap-2">
+        <button id="btn-start" class="btn btn-sm text-white px-3"
+          style="background: var(--success); border: none; font-weight: 500;">
+          Start Bot
+        </button>
+        <button id="btn-stop" class="btn btn-sm text-white px-3"
+          style="background: var(--danger); border: none; font-weight: 500;">
+          Stop Bot
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="app" style="padding-top: 10px;">
+    <!-- Login -->
+    <div id="login-card" class="card mb-4" style="max-width: 400px">
+      <div class="card-body">
+        <h5 class="card-title">Admin Login</h5>
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input id="login-email" type="email" class="form-control" placeholder="admin@mrcoach.com" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <input id="login-password" type="password" class="form-control" />
+        </div>
+        <button id="btn-login" class="btn text-white w-100"
+          style="background: var(--primary); font-weight: 600;">Login</button>
+        <div class="text-danger small mt-2" id="login-error"></div>
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <div id="main-content" style="display: none; padding-top: 20px;">
+      <ul class="nav mb-4" id="tabs" style="gap: 16px; border-bottom: 1px solid var(--border);">
+        <li class="nav-item">
+          <button class="nav-link custom-tab active" data-tab="dashboard">
+            Overview
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link custom-tab" data-tab="clients">
+            Client Leads <span id="tab-badge-clients" class="tab-badge">0</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link custom-tab" data-tab="coaches">
+            Coach Leads <span id="tab-badge-coaches" class="tab-badge">0</span>
+          </button>
+        </li>
+      </ul>
+
+      <div id="tab-dashboard">
+        <div class="row g-2 mb-4 text-center">
+          <div class="col">
+            <div class="card bg-white border-0 shadow-sm p-3">
+              <div class="small" style="color: var(--text-secondary)">Clients</div>
+              <div id="dash-total-clients" class="fs-4 fw-bold">0</div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card bg-white border-0 shadow-sm p-3">
+              <div class="small" style="color: var(--text-secondary)">Coaches</div>
+              <div id="dash-total-coaches" class="fs-4 fw-bold">0</div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card bg-white border-0 shadow-sm p-3">
+              <div class="small" style="color: var(--primary)">Today</div>
+              <div id="dash-today-leads" class="fs-4 fw-bold" style="color: var(--primary)">0</div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card bg-white border-0 shadow-sm p-3">
+              <div class="small" style="color: #F59E0B">Pending</div>
+              <div id="dash-pending-leads" class="fs-4 fw-bold" style="color: #F59E0B">0</div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card bg-white border-0 shadow-sm p-3">
+              <div class="small" style="color: var(--success)">Done</div>
+              <div id="dash-completed-leads" class="fs-4 fw-bold" style="color: var(--success)">0</div>
+            </div>
+          </div>
+        </div>
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <h6 class="card-title">Bot Health</h6>
+            <div class="d-flex align-items-center gap-3">
+              <div>
+                <span id="status-dot-inner" class="status-dot status-disconnected"></span>
+                <span id="status-text-inner" class="fw-bold">Offline</span>
+              </div>
+              <div class="text-muted small">
+                Last Active: <span id="last-active">-</span>
+              </div>
+            </div>
+            <div id="qr-alert" class="alert alert-warning mt-2 small p-2" style="display:none">
+              ⚠️ QR Scan Required to reconnect.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Client Leads Tab -->
+      <div id="tab-clients" style="display: none">
+        <!-- Client KPIs -->
+        <div class="row g-3 mb-4">
+          <div class="col-md-3">
+            <div class="card bg-white border-0 shadow-sm p-3">
+              <div class="small" style="color: var(--text-secondary)">Total Client Leads</div>
+              <div id="kpi-client-total" class="fs-4 fw-bold">0</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-white border-0 shadow-sm p-3">
+              <div class="small" style="color: #F59E0B">Pending Leads</div>
+              <div id="kpi-client-pending" class="fs-4 fw-bold" style="color: #F59E0B">0</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-white border-0 shadow-sm p-3">
+              <div class="small" style="color: var(--success)">Converted Leads</div>
+              <div id="kpi-client-done" class="fs-4 fw-bold" style="color: var(--success)">0</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-white border-0 shadow-sm p-3">
+              <div class="small" style="color: var(--primary)">Today's Leads</div>
+              <div id="kpi-client-today" class="fs-4 fw-bold" style="color: var(--primary)">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="card-title m-0">Clients Listing</h5>
+            </div>
+
+            <div class="filter-grid">
+              <div class="custom-input-wrapper">
+                <span class="custom-input-icon">🔍</span>
+                <input id="client-search" type="text" class="form-control with-icon" placeholder="Search name/phone..."
+                  oninput="filterClients()">
+              </div>
+
+              <div class="custom-input-wrapper">
+                <span class="custom-input-icon">📍</span>
+                <select id="client-filter-location" class="form-select with-icon" onchange="filterClients()">
+                  <option value="">All Locations</option>
+                </select>
+              </div>
+
+              <div class="custom-input-wrapper">
+                <select id="client-filter-status" class="form-select" onchange="filterClients()">
+                  <option value="">All Statuses</option>
+                  <option value="PENDING">PENDING</option>
+                  <option value="PROCESSING">PROCESSING</option>
+                  <option value="COMPLETED">COMPLETED</option>
+                  <option value="REJECTED">REJECTED</option>
+                </select>
+              </div>
+
+              <div class="custom-input-wrapper">
+                <span class="custom-input-icon">📅</span>
+                <input id="client-filter-date" type="date" class="form-control with-icon" onchange="filterClients()">
+              </div>
+
+              <div class="dropdown custom-input-wrapper">
+                <button class="btn dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                  type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                  style="background: var(--card); font-weight:500; color: var(--text-primary); border: 1px solid var(--border);">
+                  Export ▾
+                </button>
+                <ul class="dropdown-menu w-100 shadow-sm border-0" style="border-radius: 8px;">
+                  <li><button class="dropdown-item py-2" onclick="exportLeads('clients', 'xlsx')">Export as
+                      Excel</button></li>
+                  <li><button class="dropdown-item py-2" onclick="exportLeads('clients', 'pdf')">Export as PDF</button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="saas-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Name</th>
+                    <th>Gender</th>
+                    <th>Phone</th>
+                    <th>Location</th>
+                    <th>Requirement</th>
+                    <th>Status</th>
+                    <th style="text-align: right;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="clients-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coach Leads Tab -->
+      <div id="tab-coaches" style="display: none">
+        <!-- Coach KPIs -->
+        <div class="row g-3 mb-4">
+          <div class="col-md-3">
+            <div class="card bg-white border-0 shadow-sm p-3">
+              <div class="small" style="color: var(--text-secondary)">Total Coach Leads</div>
+              <div id="kpi-coach-total" class="fs-4 fw-bold">0</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-white border-0 shadow-sm p-3">
+              <div class="small" style="color: #F59E0B">Pending Leads</div>
+              <div id="kpi-coach-pending" class="fs-4 fw-bold" style="color: #F59E0B">0</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-white border-0 shadow-sm p-3">
+              <div class="small" style="color: var(--success)">Converted Leads</div>
+              <div id="kpi-coach-done" class="fs-4 fw-bold" style="color: var(--success)">0</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-white border-0 shadow-sm p-3">
+              <div class="small" style="color: var(--primary)">Today's Leads</div>
+              <div id="kpi-coach-today" class="fs-4 fw-bold" style="color: var(--primary)">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="card-title m-0">Coaches Listing</h5>
+            </div>
+
+            <div class="filter-grid">
+              <div class="custom-input-wrapper">
+                <span class="custom-input-icon">🔍</span>
+                <input id="coach-search" type="text" class="form-control with-icon"
+                  placeholder="Search name, phone, ex..." oninput="filterCoaches()">
+              </div>
+
+              <div class="custom-input-wrapper">
+                <span class="custom-input-icon">📍</span>
+                <select id="coach-filter-location" class="form-select with-icon" onchange="filterCoaches()">
+                  <option value="">All Locations</option>
+                </select>
+              </div>
+
+              <div class="custom-input-wrapper">
+                <select id="coach-filter-status" class="form-select" onchange="filterCoaches()">
+                  <option value="">All Statuses</option>
+                  <option value="PENDING">PENDING</option>
+                  <option value="PROCESSING">PROCESSING</option>
+                  <option value="COMPLETED">COMPLETED</option>
+                  <option value="REJECTED">REJECTED</option>
+                </select>
+              </div>
+
+              <!-- Empty div for Date column spacer on coaches -->
+              <div class="custom-input-wrapper" style="visibility: hidden;">
+              </div>
+
+              <div class="dropdown custom-input-wrapper">
+                <button class="btn dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                  type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                  style="background: var(--card); font-weight:500; color: var(--text-primary); border: 1px solid var(--border);">
+                  Export ▾
+                </button>
+                <ul class="dropdown-menu w-100 shadow-sm border-0" style="border-radius: 8px;">
+                  <li><button class="dropdown-item py-2" onclick="exportLeads('coaches', 'xlsx')">Export as
+                      Excel</button></li>
+                  <li><button class="dropdown-item py-2" onclick="exportLeads('coaches', 'pdf')">Export as PDF</button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="saas-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>City</th>
+                    <th>Specialization</th>
+                    <th>Experience</th>
+                    <th>Status</th>
+                    <th style="text-align: right;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="coaches-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lead Detail Modal -->
+  <div class="modal fade" id="leadModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h6 class="modal-title" id="modal-lead-title">Lead Details</h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body small" id="modal-lead-content">
+          <!-- Dynamic content -->
+        </div>
+        <div class="modal-footer py-1">
+          <div class="d-flex w-100 justify-content-between align-items-center">
+            <select id="modal-status-update" class="form-select form-select-sm" style="width:150px">
+              <option value="PENDING">PENDING</option>
+              <option value="PROCESSING">PROCESSING</option>
+              <option value="COMPLETED">COMPLETED</option>
+              <option value="REJECTED">REJECTED</option>
+            </select>
+            <button id="btn-save-status" class="btn text-white btn-sm"
+              style="background: var(--primary); font-weight: 500;">Update Status</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+  </div>
+
+  <script>
+    let token = localStorage.getItem("mrc_admin_token") || null;
+    const loginCard = document.getElementById("login-card");
+    const mainContent = document.getElementById("main-content");
+
+    async function api(path, options = {}) {
+      const headers = options.headers || {};
+      if (token) headers["Authorization"] = "Bearer " + token;
+      options.headers = headers;
+      const res = await fetch(path, options);
+      if (res.status === 401) {
+        token = null;
+        localStorage.removeItem("mrc_admin_token");
+        showLogin();
+        throw new Error("Unauthorized");
+      }
+      return res.json();
+    }
+
+    function showLogin() {
+      document.getElementById('saas-header').style.setProperty('display', 'none', 'important');
+      loginCard.style.display = "block";
+      mainContent.style.display = "none";
+    }
+
+    let currentLeads = { clients: [], coaches: [] };
+    let leadModal;
+    let activeLeadId = null;
+    let activeLeadType = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      leadModal = new bootstrap.Modal(document.getElementById('leadModal'));
+    });
+
+    function showMain() {
+      document.getElementById('saas-header').style.setProperty('display', 'flex', 'important');
+      loginCard.style.display = "none";
+      mainContent.style.display = "block";
+      refreshStatus();
+      refreshDashboard();
+      refreshClients();
+      refreshCoaches();
+    }
+
+    document.getElementById("btn-login").addEventListener("click", async () => {
+      const email = document.getElementById("login-email").value.trim();
+      const password = document.getElementById("login-password").value.trim();
+      const errEl = document.getElementById("login-error");
+      errEl.textContent = "";
+
+      try {
+        const res = await fetch("/api/admin/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          errEl.textContent = data.error || "Login failed";
+          return;
+        }
+        token = data.token;
+        localStorage.setItem("mrc_admin_token", token);
+        showMain();
+      } catch (e) {
+        errEl.textContent = "Network error";
+      }
+    });
+
+    async function refreshStatus() {
+      try {
+        const data = await api("/api/status");
+        const dot = document.getElementById("status-dot");
+        const dotInner = document.getElementById("status-dot-inner");
+        const text = document.getElementById("status-text");
+        const textInner = document.getElementById("status-text-inner");
+        const activeEl = document.getElementById("last-active");
+        const qrAlert = document.getElementById("qr-alert");
+
+        const isOk = data.status === "CONNECTED";
+        const theme = isOk ? "status-connected" : (data.status === "LOADING" ? "status-loading" : "status-disconnected");
+        const label = isOk ? "Bot Active" : (data.status === "LOADING" ? "Initializing" : "Bot Offline");
+
+        dot.className = "status-dot-8 " + theme;
+        if (dotInner) dotInner.className = "status-dot " + theme;
+        text.textContent = label;
+        if (textInner) textInner.textContent = label;
+        activeEl.textContent = data.lastActive ? new Date(data.lastActive).toLocaleString() : "Never";
+        qrAlert.style.display = data.status === "LOADING" ? "block" : "none";
+
+      } catch { }
+    }
+
+    async function refreshDashboard() {
+      try {
+        const res = await api("/api/reports/summary");
+        const s = res.stats;
+        document.getElementById("dash-total-clients").textContent = s.total_clients;
+        document.getElementById("dash-total-coaches").textContent = s.total_coaches;
+        document.getElementById("dash-today-leads").textContent = s.today_leads;
+        document.getElementById("dash-pending-leads").textContent = s.pending_leads;
+        document.getElementById("dash-completed-leads").textContent = s.completed_leads;
+      } catch { }
+    }
+
+    function populateLocationDropdown(selectId, dataArray, locationKey) {
+      const select = document.getElementById(selectId);
+      const currentValue = select.value;
+      const counts = {};
+
+      dataArray.forEach(item => {
+        let loc = item[locationKey];
+        loc = (loc && loc.trim() !== '' && loc !== '-') ? loc.trim() : 'Unknown';
+        counts[loc] = (counts[loc] || 0) + 1;
+      });
+
+      select.innerHTML = '<option value="">All Locations</option>';
+      Object.keys(counts).sort().forEach(loc => {
+        const option = document.createElement('option');
+        option.value = loc.toLowerCase();
+        option.textContent = `${loc} - ${counts[loc]}`;
+        select.appendChild(option);
+      });
+
+      Array.from(select.options).forEach(opt => {
+        if (opt.value === currentValue) select.value = currentValue;
+      });
+    }
+
+    function calculateKPIs() {
+      const today = new Date().toISOString().split('T')[0];
+
+      // Clients
+      document.getElementById('kpi-client-total').textContent = currentLeads.clients.length;
+      document.getElementById('kpi-client-pending').textContent = currentLeads.clients.filter(l => l.status === 'PENDING').length;
+      document.getElementById('kpi-client-done').textContent = currentLeads.clients.filter(l => l.status === 'COMPLETED').length;
+      document.getElementById('kpi-client-today').textContent = currentLeads.clients.filter(l => (l.created_at || '').startsWith(today)).length;
+
+      // Coaches
+      document.getElementById('kpi-coach-total').textContent = currentLeads.coaches.length;
+      document.getElementById('kpi-coach-pending').textContent = currentLeads.coaches.filter(l => l.status === 'PENDING').length;
+      document.getElementById('kpi-coach-done').textContent = currentLeads.coaches.filter(l => l.status === 'COMPLETED').length;
+      document.getElementById('kpi-coach-today').textContent = currentLeads.coaches.filter(l => (l.created_at || '').startsWith(today)).length;
+    }
+
+    async function refreshClients() {
+      try {
+        const data = await api("/api/leads/clients");
+        currentLeads.clients = data.leads || [];
+        document.getElementById('tab-badge-clients').innerHTML = currentLeads.clients.length;
+        populateLocationDropdown('client-filter-location', currentLeads.clients, 'location');
+        calculateKPIs();
+        filterClients();
+      } catch { }
+    }
+
+    async function refreshCoaches() {
+      try {
+        const data = await api("/api/leads/coaches");
+        currentLeads.coaches = data.leads || [];
+        document.getElementById('tab-badge-coaches').innerHTML = currentLeads.coaches.length;
+        populateLocationDropdown('coach-filter-location', currentLeads.coaches, 'city');
+        calculateKPIs();
+        filterCoaches();
+      } catch { }
+    }
+
+    function filterClients() {
+      const q = document.getElementById('client-search').value.toLowerCase();
+      const locQ = document.getElementById('client-filter-location').value.toLowerCase();
+      const status = document.getElementById('client-filter-status').value;
+      const date = document.getElementById('client-filter-date').value;
+
+      const filtered = currentLeads.clients.filter(l => {
+        const matchQ = !q || (l.name || '').toLowerCase().includes(q) || (l.phone || '').includes(q);
+        const locString = (l.location && l.location.trim() !== '' && l.location !== '-') ? l.location.trim().toLowerCase() : 'unknown';
+        const matchLoc = !locQ || locString === locQ;
+        const matchStatus = !status || l.status === status;
+        const matchDate = !date || l.created_at.startsWith(date);
+        return matchQ && matchLoc && matchStatus && matchDate;
+      });
+
+      const tbody = document.getElementById("clients-body");
+      tbody.innerHTML = filtered.length ? "" : '<tr><td colspan="8" class="text-center py-4 text-muted">No match found</td></tr>';
+      filtered.forEach(l => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="col-loc">${new Date(l.created_at).toLocaleDateString()}</td>
+          <td class="col-name">${l.name || 'User'}</td>
+          <td>${l.gender || '-'}</td>
+          <td class="col-phone">${l.phone}</td>
+          <td class="col-loc">${l.location || '-'}</td>
+          <td class="col-loc text-truncate" style="max-width:150px">${l.goal || '-'}</td>
+          <td><span class="status-badge badge-${l.status.toLowerCase()}">${l.status}</span></td>
+          <td class="actions-col">
+            <span class="action-icon" title="View">👁</span>
+            <span class="action-icon" title="Edit">✏</span>
+            <span class="action-icon text-success" title="Mark Done" style="font-weight: bold;">✓</span>
+          </td>
+        `;
+        row.onclick = () => openModal(l, 'client');
+        tbody.appendChild(row);
+      });
+    }
+
+    function filterCoaches() {
+      const q = document.getElementById('coach-search').value.toLowerCase();
+      const locQ = document.getElementById('coach-filter-location').value.toLowerCase();
+      const status = document.getElementById('coach-filter-status').value;
+
+      const filtered = currentLeads.coaches.filter(l => {
+        const matchQ = !q ||
+          (l.name || '').toLowerCase().includes(q) ||
+          (l.wa_id || '').includes(q) ||
+          (l.experience || '').toLowerCase().includes(q);
+        const locString = (l.city && l.city.trim() !== '' && l.city !== '-') ? l.city.trim().toLowerCase() : 'unknown';
+        const matchLoc = !locQ || locString === locQ;
+        const matchStatus = !status || l.status === status;
+        return matchQ && matchLoc && matchStatus;
+      });
+
+      const tbody = document.getElementById("coaches-body");
+      tbody.innerHTML = filtered.length ? "" : '<tr><td colspan="8" class="text-center py-4 text-muted">No match found</td></tr>';
+      filtered.forEach(l => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="col-loc">${new Date(l.created_at).toLocaleDateString()}</td>
+          <td class="col-name">${l.name || 'Coach'}</td>
+          <td class="col-phone">${l.wa_id.split('@')[0]}</td>
+          <td class="col-loc">${l.city || '-'}</td>
+          <td class="col-loc">${l.specialization || '-'}</td>
+          <td class="col-loc">${l.experience || '-'}</td>
+          <td><span class="status-badge badge-${l.status.toLowerCase()}">${l.status}</span></td>
+          <td class="actions-col">
+            <span class="action-icon" title="View">👁</span>
+            <span class="action-icon" title="Edit">✏</span>
+            <span class="action-icon text-success" title="Mark Done" style="font-weight: bold;">✓</span>
+          </td>
+        `;
+        row.onclick = () => openModal(l, 'coach');
+        tbody.appendChild(row);
+      });
+    }
+
+    function openModal(data, type) {
+      activeLeadId = data.id;
+      activeLeadType = type;
+      document.getElementById('modal-lead-title').innerText = type === 'client' ? 'Client Lead Context' : 'Coach Profile context';
+      document.getElementById('modal-status-update').value = data.status;
+
+      const content = document.getElementById('modal-lead-content');
+      if (type === 'client') {
+        content.innerHTML = `
+                <div class="mb-2"><strong>Name:</strong> ${data.name || 'Unknown'}</div>
+                <div class="mb-2"><strong>Gender:</strong> ${data.gender || '-'}</div>
+                <div class="mb-2"><strong>Phone:</strong> ${data.phone || '-'}</div>
+                <div class="mb-2"><strong>Location:</strong> ${data.location || '-'}</div>
+                <div class="mb-2"><strong>Fitness Goal:</strong><br>${data.goal || '-'}</div>
+                <div class="mb-2"><strong>Submitted on:</strong> ${new Date(data.created_at).toLocaleString()}</div>
+            `;
+      } else {
+        content.innerHTML = `
+                <div class="mb-2"><strong>Name:</strong> ${data.name || 'Unknown'}</div>
+                <div class="mb-2"><strong>City:</strong> ${data.city || '-'}</div>
+                <div class="mb-2"><strong>Specialization:</strong> ${data.specialization || '-'}</div>
+                <div class="mb-2"><strong>Work Experience:</strong><br>${data.experience || '-'}</div>
+                <div class="mb-2"><strong>Submitted on:</strong> ${new Date(data.created_at).toLocaleString()}</div>
+            `;
+      }
+      leadModal.show();
+    }
+
+    document.getElementById('btn-save-status').addEventListener('click', async () => {
+      const status = document.getElementById('modal-status-update').value;
+      const endpoint = activeLeadType === 'client' ? '/api/leads/clients/update-status' : '/api/leads/coaches/update-status';
+
+      try {
+        await api(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: activeLeadId, status })
+        });
+        leadModal.hide();
+        activeLeadType === 'client' ? refreshClients() : refreshCoaches();
+        refreshDashboard();
+      } catch (e) { alert('Failed to update'); }
+    });
+
+    function exportLeads(type, format) {
+      const data = type === 'clients' ? currentLeads.clients : currentLeads.coaches;
+      if (!data.length) return alert('No data to export');
+
+      if (format === 'xlsx') {
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, type);
+        XLSX.writeFile(wb, `MRCoach_${type}_Leads.xlsx`);
+      } else {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.text(`MRCoach ${type.toUpperCase()} LEADS`, 14, 15);
+
+        const head = type === 'clients'
+          ? [['Date', 'Name', 'Phone', 'Location', 'Goal', 'Status']]
+          : [['Date', 'Name', 'City', 'Spec', 'Exp', 'Status']];
+
+        const body = data.map(l => type === 'clients'
+          ? [new Date(l.created_at).toLocaleDateString(), l.name, l.phone, l.location, l.goal, l.status]
+          : [new Date(l.created_at).toLocaleDateString(), l.name, l.city, l.specialization, l.experience, l.status]
+        );
+
+        doc.autoTable({ head, body, startY: 20 });
+        doc.save(`MRCoach_${type}_Leads.pdf`);
+      }
+    }
+
+    document.getElementById("btn-start").addEventListener("click", async () => {
+      await api("/api/start", { method: "POST" });
+      setTimeout(refreshStatus, 1000);
+    });
+
+    document.getElementById("btn-stop").addEventListener("click", async () => {
+      await api("/api/stop", { method: "POST" });
+      setTimeout(refreshStatus, 1000);
+    });
+
+    document.querySelectorAll("#tabs .nav-link").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("#tabs .nav-link").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        const items = ['dashboard', 'clients', 'coaches'];
+        items.forEach(i => {
+          const el = document.getElementById("tab-" + i);
+          if (el) el.style.display = "none";
+        });
+
+        const tab = btn.getAttribute("data-tab");
+        const target = document.getElementById("tab-" + tab);
+        if (target) target.style.display = "block";
+
+        if (tab === "dashboard") refreshDashboard();
+        if (tab === "clients") refreshClients();
+        if (tab === "coaches") refreshCoaches();
+      });
+    });
+
+    if (token) {
+      showMain();
+      setInterval(refreshStatus, 5000);
+      setInterval(refreshDashboard, 15000);
+    } else {
+      showLogin();
+    }
+  </script>
+</body>
+
+</html>
