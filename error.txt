@@ -1,0 +1,5 @@
+[dotenv@17.2.3] injecting env (14) from .env -- tip: ??????  override existing env vars with { override: true }
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ???? add observability to secrets: https://dotenvx.com/ops
+Server listening on port 3000
+Admin user already exists: admin@mrcoach.com
+HTTP dashboard listening on http://localhost:3000/admin
