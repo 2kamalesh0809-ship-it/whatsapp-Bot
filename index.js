@@ -361,21 +361,27 @@ async function handleRoleChoice(msg, session, lower) {
     session.step = 'COLLECT_CLIENT_NAME';
   } else if (lower === '2') {
     session.step = 'COLLECT_COACH_NAME';
-    await msg.reply(
-      '🏋️ *Welcome to Mr.COACH FITNESS COMPANY*\n\n' +
+    const promoPath = path.join(__dirname, 'WhatsApp Image 2026-03-23 at 6.34.53 PM (1).jpeg');
+    const coachMsg = '🏋️ *Welcome to Mr.COACH FITNESS COMPANY*\n\n' +
       'Are you a *Certified Fitness Coach / Physiotherapist / Yoga Trainer / Sports Coach / Dietitian / Massage Therapist?*\n\n' +
       'If yes, please:\n\n' +
       '1️⃣ Download the Mr.Coach App – [ https://play.google.com/store/apps/details?id=com.mrcoach.pro ]\n\n' +
       '2️⃣ Join our Coaches WhatsApp Community – [ https://chat.whatsapp.com/F1cDrGmE8VhHNHbamTO0Me ]\n\n' +
-      '3️⃣ Watch the Tutorial Videos on YouTube – [ https://youtu.be/awQgQpxhwc0?si=dCzObleqSY97JI1k   ]\n\n' +
+      '3️⃣ Watch the Tutorial Videos on YouTube – [ https://youtu.be/awQgQpxhwc0?si=dCzObleqSY97JI1k ]\n\n' +
       '4️⃣ Start accessing client leads.\n\n' +
       'Reply with:👇\n\n' +
       'Name:\n' +
       'City:\n' +
       'Specialization:\n' +
       'Experience (Years):\n\n' +
-      'Our Mr.Coach Team will guide you further. 💪📲'
-    );
+      'Our Mr.Coach Team will guide you further. 💪📲';
+
+    if (fs.existsSync(promoPath)) {
+      const media = MessageMedia.fromFilePath(promoPath);
+      await waClient.sendMessage(msg.from, media, { caption: coachMsg });
+    } else {
+      await msg.reply(coachMsg);
+    }
   } else {
     await msg.reply('Please reply with 1 for Client or 2 for Coach.');
   }
