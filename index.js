@@ -137,8 +137,29 @@ function createClient() {
         '--disable-accelerated-2d-canvas',
         '--no-first-run',
         '--no-zygote',
-        '--disable-gpu'
+        '--disable-gpu',
+        '--single-process', // Aggressively saves RAM by using one process
+        '--disable-extensions',
+        '--disable-default-apps',
+        '--no-default-browser-check'
       ]
+    }
+  });
+
+  // PERFORMANCE HACK: Block heavy assets (Images, CSS, Fonts) to fit into 512MB RAM
+  client.on('browser_launched', async (browser) => {
+    const pages = await browser.pages();
+    if (pages.length > 0) {
+      const page = pages[0];
+      await page.setRequestInterception(true);
+      page.on('request', (req) => {
+        const resourceType = req.resourceType();
+        if (['image', 'stylesheet', 'font', 'media'].includes(resourceType)) {
+          req.abort();
+        } else {
+          req.continue();
+        }
+      });
     }
   });
 
